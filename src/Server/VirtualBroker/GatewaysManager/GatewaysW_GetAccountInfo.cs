@@ -270,6 +270,7 @@ namespace VirtualBroker
             //Position.U407941 - Symbol: VXX, SecType: OPT, Currency: USD, Position: 3, Avg cost: 780.35113335
             //    Option.LastTradeDate: 20181221, Right: C, Strike: 37, Multiplier: 100, LocalSymbol: 'VXX   181221C00037000'
             // Contract.ConID is inique integer. But for options of the same underlying ConID is different, so we cannot use ConID. We have to group it by stocks.
+            bool isInRegularUsaTradingHoursNow = Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3));
 
             // 1. Add p_addPrInfoSymbolsArr additional tickers to the first AccInfo positions as 0 positions
             int ourFakeContractIdSeed = -1;
@@ -451,7 +452,16 @@ namespace VirtualBroker
                             // But if both ask and bid is -1, then don't accept the price, but wait for more data
                             bool isAskBidAcceptable = (!Double.IsNaN(poss[0].AskPrice)) && (!Double.IsNaN(poss[0].BidPrice));
                             if (isAskBidAcceptable)
+                            {
                                 isAskBidAcceptable = (poss[0].AskPrice != -1.0) && (poss[0].BidPrice != -1.0);
+                                if (isAskBidAcceptable && !isInRegularUsaTradingHoursNow)
+                                {   // sometimes before premarket: ask: 8.0 Bid: 100,000.01. In that case, don't accept it as a correct AskBid
+                                    // but BRK.A is "340,045" and legit. So, big values should be accepted if both Ask, Bid is big.
+                                    // if it is premarket, check that their difference, the AskBid spread is also small. If not, ignore them (and later LastClose will be given back)
+                                    // NOTE: maybe this should be considered an error, no matter if it is isInRegularUsaTradingHoursNow or not.
+                                    isAskBidAcceptable = (Math.Abs(Math.Abs(poss[0].AskPrice) - Math.Abs(poss[0].BidPrice)) < 90000);
+                                }
+                            }
                             if (isAskBidAcceptable)
                             {
                                 double pAsk = (poss[0].AskPrice < 0.0) ? 0.0 : poss[0].AskPrice;

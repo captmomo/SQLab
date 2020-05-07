@@ -271,12 +271,13 @@ namespace Overmind
             string charmatEmailInnerlStr = String.Empty;
             string charmatPhoneCallInnerStr = String.Empty;
 
-            double biduTodayPctChange = GetTodayPctChange("BIDU");
-            if (Math.Abs(biduTodayPctChange) >= 0.04)
+            double kwebTodayPctChange = GetTodayPctChange("KWEB");
+            if (Math.Abs(kwebTodayPctChange) >= 0.04)
             {
-                gyantalEmailInnerlStr += "BIDU price warning: bigger than usual move. In percentage: " + (biduTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
-                gyantalPhoneCallInnerStr += "the ticker B I D U, ";
+                gyantalEmailInnerlStr += "KWEB price warning: bigger than usual move. In percentage: " + (kwebTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
+                gyantalPhoneCallInnerStr += "the ticker K W E B, ";
             }
+
             double vxxTodayPctChange = GetTodayPctChange("VXX");
             if (Math.Abs(vxxTodayPctChange) >= 0.06)
             {
@@ -284,13 +285,6 @@ namespace Overmind
                 gyantalPhoneCallInnerStr += "the ticker V X X ";
                 charmatEmailInnerlStr += "VXX price warning: bigger than usual move. In percentage: " + (vxxTodayPctChange * 100).ToString("0.00") + @"%";
                 charmatPhoneCallInnerStr += "the ticker V X X ";
-            }
-
-            double fbTodayPctChange = GetTodayPctChange("FB");
-            if (Math.Abs(fbTodayPctChange) >= 0.04)
-            {
-                charmatEmailInnerlStr += "Facebook price warning: bigger than usual move. In percentage: " + (fbTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
-                charmatPhoneCallInnerStr += "the ticker Facebook, ";
             }
 
             double amznTodayPctChange = GetTodayPctChange("AMZN");
@@ -355,14 +349,11 @@ namespace Overmind
         {
             Utils.Logger.Trace("GetTodayPctChange(): " + p_exchangeWithTicker);
             // https://finance.google.com/finance?q=BATS%3AVXX
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("Accept", "text/html, application/xhtml+xml, image/jxr, */*");
-            client.DefaultRequestHeaders.Add("Accept-Language", "en-GB, en; q=0.7, hu; q=0.3");
-            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063");  // this is the Edge string on 2017-11-03
-            //var priceHtml = client.GetStringAsync($"https://finance.google.com/finance?q=BATS%3AVXX" + p_exchangeWithTicker.Replace(":", "%3A")).Result;
             string url = $"https://www.cnbc.com/quotes/?symbol=" + p_exchangeWithTicker.Replace(":", "%3A");
-            Utils.Logger.Trace("HttpClient().GetStringAsync queried with:'" + url + "'");
-            var priceHtml = client.GetStringAsync(url).Result;
+            Utils.Logger.Trace("DownloadStringWithRetry() queried with:'" + url + "'");
+            string priceHtml = String.Empty;
+            Utils.DownloadStringWithRetry(out priceHtml, url, 5, TimeSpan.FromSeconds(5), true);        
+
             string firstCharsWithSubString = !String.IsNullOrWhiteSpace(priceHtml) && priceHtml.Length >= 300 ? priceHtml.Substring(0, 300) : priceHtml;
             Utils.Logger.Trace("HttpClient().GetStringAsync returned: " + firstCharsWithSubString);
 

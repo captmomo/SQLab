@@ -9,7 +9,7 @@ namespace VirtualBroker
     {
         // DWT is used only if short UWT is not available, DWT can be left here, no harm, UNG is used if UWT cannot be traded by user
         // SCO is used instead of UWT sometimes
-        public string[] AllPotentialTickersOfPortfolios = new string[] { "SVXY", "VXX", "ZIV", "TQQQ", "TMV", "UWT", "UGAZ",       "SCO", "UNG",  "DWT", "VXZ", "TMF" };  
+        public string[] AllPotentialTickersOfPortfolios = new string[] { "SVXY", "VXX", "ZIV", "TQQQ", "TMV", "UCO", "UGAZ",       "SCO", "UNG",  "VXZ", "TMF" };  
 
         public string[] DefaultTradedTickers = new string[] { "TVIX", "TMV" };            // strategy default is used only if PortfolioParamHarryLong is not given
         public double[] DefaultTradedAssetsWeights = new double[] { -0.35, -0.65 };       // strategy default is used only if PortfolioParamHarryLong is not given
@@ -40,8 +40,8 @@ namespace VirtualBroker
         //>-In brief, this is the less performance, but safer trade.Let's do SVXY.
         //public string[] Tickers = new string[] { "SVXY", "TMV", "UWT", "UGAZ" };      // portfolio defaults until 2018-02-21
         //public double[] AssetsWeights = new double[] { 0.70, -0.71, -0.07, -0.22 }; // portfolio defaults until 2018-02-21, Markowitz MPT optimal weight using 135% allocation. With daily rebalancing it is safe.
-        public string[] Tickers = new string[] { "SVXY", "VXX", "ZIV", "TQQQ", "TMV", "UWT", "UGAZ" };      // portfolio defaults after 2018-02-21
+        public string[] Tickers = new string[] { "SVXY", "VXX", "ZIV", "TQQQ", "TMV", "UCO", "UGAZ" };      // portfolio defaults after 2018-02-21
         //public double[] AssetsWeights = new double[] { 0.15, -0.05, 0.10, 0.20, -0.85, -0.09, -0.26 }; // portfolio defaults after 2018-02-21
-        public double[] AssetsWeights = new double[] { 0.15, -0.05, 0.10, 0.25, -0.85, -0.09, -0.26 }; // portfolio defaults after 2018-03-01. SVXY.Classid (1x) deleveraged to SVXY.Light(0.5). We compensate it with +5% more TQQQ. See gDoc chapter.
+        public double[] AssetsWeights = new double[] { 0.15, -0.05, 0.10, 0.25, -0.85, -0.135, -0.26 }; // portfolio defaults after 2018-03-01. SVXY.Classid (1x) deleveraged to SVXY.Light(0.5). We compensate it with +5% more TQQQ. See gDoc chapter.
     }
 }

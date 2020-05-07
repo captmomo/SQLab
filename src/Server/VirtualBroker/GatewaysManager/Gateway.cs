@@ -245,7 +245,7 @@ namespace VirtualBroker
         //+ check the number of Trades in the last 10 minutes < 20; After that, stop everything.
         //+ check the $volume of those trades based on last day price (SQ DB SQL usage).; it should be < 1$ Mil in the last 10 minutes
 
-        internal int PlaceOrder(double p_portfolioMaxTradeValueInCurrency, double p_portfolioMinTradeValueInCurrency, Contract p_contract, TransactionType p_transactionType, double p_volume, OrderExecution p_orderExecution, OrderTimeInForce p_orderTif, double? p_limitPrice, double? p_stopPrice, double p_estimatedPrice, bool p_isSimulatedTrades, StringBuilder p_detailedReportSb)
+        internal int PlaceOrder(double p_portfolioMaxTradeValueInCurrency, double p_portfolioMinTradeValueInCurrency, Contract p_contract, TransactionType p_transactionType, double p_volume, OrderExecution p_orderExecution, OrderTimeInForce p_orderTif, double? p_limitPrice, double? p_stopPrice, double p_estimatedPrice, bool p_isSimulatedTrades, double p_oldVolume, StringBuilder p_detailedReportSb)
         {
             // 1. Glitch protections
             int virtualOrderID = GetUniqueVirtualOrderID;
@@ -302,7 +302,8 @@ namespace VirtualBroker
             // 2. Execute different orderTypes MKT, MOC
             // vbOrderId and ibOrderID is different, because some Limit orders, or other tricky orders are executed in real life by many concrete IB orders
             // or there are two opposite vbOrder that cancels each other out at MOC, therefore there is no ibOrder at all
-            string logMsg = $"{this.GatewayUser.ToShortFriendlyString()}: {(p_isSimulatedTrades ? "Simulated" : "Real")} {p_transactionType} {p_volume} {p_contract.Symbol} (${estimatedTransactionValue:F0})";
+            double transactionOfOldVolumePct = (p_oldVolume == 0) ? 1.00 : p_volume / p_oldVolume;
+            string logMsg = $"{this.GatewayUser.ToShortFriendlyString()}: {(p_isSimulatedTrades ? "Simulated" : "Real")} {p_transactionType} {p_volume} ({transactionOfOldVolumePct*100:F2}%) {p_contract.Symbol} (${estimatedTransactionValue:F0})";
             Utils.ConsoleWriteLine(null, false, logMsg);
             Utils.Logger.Info(logMsg);
             p_detailedReportSb.AppendLine(logMsg);

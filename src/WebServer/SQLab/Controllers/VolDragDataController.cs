@@ -58,6 +58,7 @@ namespace SQLab.Controllers
         //Downloading price data from SQL Server
         public static IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> DataSQDBGmod(string[] p_allAssetList)
         {
+            Utils.Logger.Info("DataSQDBGmod() START");
             List<string> tickersNeeded = p_allAssetList.ToList();
             DateTime endTimeUtc = DateTime.UtcNow.AddDays(10);
             DateTime endTimeUtc2 = endTimeUtc.AddDays(-11);
@@ -73,7 +74,7 @@ namespace SQLab.Controllers
 
             
             IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> dataFromSQServermod = quotes;
-            
+            Utils.Logger.Info("DataSQDBGmod() END");
             return dataFromSQServermod;
         }
 
@@ -82,11 +83,17 @@ namespace SQLab.Controllers
         public string GetStr(int p_lbP)
         {
             //Defining asset lists.
-            string[] volAssetList = new string[] { "SVXY!Light0.5x.SQ", "VXX.SQ", "VXZ.SQ", "UVXY!Light1.5x.SQ", "TVIX!Better1.SQ"};
-            string[] volAssetListNN = new string[] { "SVXY_Light", "VXX", "VXZ", "UVXY_Light", "TVIX_Better" };
+            string[] volAssetList = new string[] { "SVXY!Light0.5x.SQ", "VXX.SQ", "VXZ.SQ"};
+            string[] volAssetListNN = new string[] { "SVXY_Light", "VXX", "VXZ"};
 
-           string[] etpAssetList = new string[] { "SPY", "UPRO.SQ", "QQQ", "TQQQ.SQ", "FAS.SQ", "TMV", "UGAZ", "UWT", "UGLD"};
-           string[] etpAssetListNN = new string[] { "SPY", "UPRO", "QQQ", "TQQQ", "FAS", "TMV", "UGAZ", "UWT", "UGLD" };
+            //string[] volAssetList = new string[] { "SVXY!Light0.5x.SQ", "VXX.SQ", "VXZ.SQ", "UVXY!Light1.5x.SQ", "TVIX!Better1.SQ" };
+            //string[] volAssetListNN = new string[] { "SVXY_Light", "VXX", "VXZ", "UVXY_Light", "TVIX_Better" };
+
+            string[] etpAssetList = new string[] { "SPY", "UPRO.SQ", "QQQ", "TQQQ.SQ", "FAS.SQ", "TMV", "UCO", "UGLD"};
+           string[] etpAssetListNN = new string[] { "SPY", "UPRO", "QQQ", "TQQQ", "FAS", "TMV", "UCO", "UGLD" };
+
+            //string[] etpAssetList = new string[] { "SPY", "UPRO.SQ", "QQQ", "TQQQ.SQ", "FAS.SQ", "TMV", "UGAZ", "UWT", "UGLD" };
+            //string[] etpAssetListNN = new string[] { "SPY", "UPRO", "QQQ", "TQQQ", "FAS", "TMV", "UGAZ", "UWT", "UGLD" };
 
             string[] gchAssetList = new string[] { "AAPL", "ADBE", "AMZN", "BABA", "CRM", "FB", "GOOGL", "MA", "MSFT", "NVDA", "PYPL", "QCOM", "V" };
             string[] gchAssetListNN = new string[] { "AAPL", "ADBE", "AMZN", "BABA", "CRM", "FB", "GOOGL", "MA", "MSFT", "NVDA", "PYPL", "QCOM", "V" };
@@ -96,7 +103,7 @@ namespace SQLab.Controllers
 
             string[] vixAssetList = new string[] { "^VIX" };
 
-            string[] defaultCheckedList = new string[] { "SPY", "QQQ", "VXX", "VXZ", "AAPL", "AMZN", "FB", "GOOGL" }; 
+            string[] defaultCheckedList = new string[] { "SPY", "QQQ", "VXX", "AAPL", "AMZN", "FB", "GOOGL" }; 
 
             var allAssetList = etpAssetList.Union(volAssetList).Union(gchAssetList).Union(gmAssetList).Union(vixAssetList).ToArray();
             var usedAssetList = etpAssetListNN.Union(volAssetListNN).Union(gchAssetListNN).Union(gmAssetListNN).ToArray();

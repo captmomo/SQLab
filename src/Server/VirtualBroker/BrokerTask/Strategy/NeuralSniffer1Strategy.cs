@@ -161,7 +161,7 @@ namespace VirtualBroker
 
                 // 2. Get realtime RUT data (if IBGateway doesn't give it), but IBGateway gives it.
                 var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.LAST, new PriceAndTime() }, { TickType.CLOSE, new PriceAndTime() } };    // we are interested in the following Prices
-                StrongAssert.True(Controller.g_gatewaysWatcher.GetAlreadyStreamedPrice(contract, ref rtPrices), Severity.ThrowException, "There is no point continuing if realtime RUT is not given.");
+                StrongAssert.True(Controller.g_gatewaysWatcher.GetAlreadyStreamedPrice(contract, ref rtPrices), Severity.ThrowException, $"There is no point continuing if rtPrice cannot be obtained for ticker '{contract.Symbol}'.");
                 double rus2000LastCloseIB = rtPrices[TickType.CLOSE].Price;
 
                 // Only for RUT index: This safety check has to be split for normal weekdays (1 day difference) for normal weekends (3 days difference) vs. 3-days-weekend (4+ days difference) because after 3-days weekends IB gives wrong PreviousClose: it gives a calculated one for Monday when there was no trading. However, the last one is the Friday one in our database. This is probably because IB can use 'calculated' indices instead of the one officially given by the exchange.

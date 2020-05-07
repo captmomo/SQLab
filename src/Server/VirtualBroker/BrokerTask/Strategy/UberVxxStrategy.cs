@@ -159,7 +159,7 @@ namespace VirtualBroker
             else
             {
                 var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() } };    // MID is the most honest price. LAST may happened 1 hours ago
-                StrongAssert.True(Controller.g_gatewaysWatcher.GetAlreadyStreamedPrice(contract, ref rtPrices), Severity.ThrowException, "There is no point continuing if rtPrice cannot be obtained.");
+                StrongAssert.True(Controller.g_gatewaysWatcher.GetAlreadyStreamedPrice(contract, ref rtPrices), Severity.ThrowException, $"There is no point continuing if rtPrice cannot be obtained for ticker '{contract.Symbol}'.");
                 double rtPrice = rtPrices[TickType.MID].Price;
                 StrongAssert.True(Math.Abs((m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1].AdjClosePrice - rtPrice) / m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].AdjClosePrice) < 0.006, Severity.NoException,  // should be less than 0.6%
                     $"VXX RT price from stream ({rtPrice}) is too far away from lastPrice ({m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1].AdjClosePrice}) from IB.ReqHistoricalData(), which usually is the RT price. We continue using RT stream price anyway. This usually happens after 3days weekends. No worries, replacing last historical price with RT stream price solves this perfectly. Make a comment into BrokerWrapperIb.cs/ReqHistoricalData() function in the source code with this example and date.");

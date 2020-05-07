@@ -124,7 +124,7 @@ namespace SQLab.Controllers
         }
 
         //Downloading price data from SQL Server
-        public static IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> DataSQDBG(string[] p_allAssetList)
+        public static Tuple<IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>>, List<SQLab.Controllers.QuickTester.Strategies.DailyData>> DataSQDBG(string[] p_allAssetList)
         {
             List<string> tickersNeeded = p_allAssetList.ToList();
             DateTime endTimeUtc = DateTime.UtcNow.AddDays(10);
@@ -170,12 +170,13 @@ namespace SQLab.Controllers
             }
 
             IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> quotes;
+            List<SQLab.Controllers.QuickTester.Strategies.DailyData> VIXDailyquotes = null;
+
+            quotes = getAllQuotesData.Item1.ToList().GetRange(0, p_allAssetList.Length - 1);
+            VIXDailyquotes = getAllQuotesData.Item1[p_allAssetList.Length - 1];
 
 
-            quotes = getAllQuotesData.Item1.ToList();
-
-
-            IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> dataFromSQServer = quotes;
+            Tuple<IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>>, List<SQLab.Controllers.QuickTester.Strategies.DailyData>> dataFromSQServer = Tuple.Create(quotes,VIXDailyquotes);
 
             return dataFromSQServer;
         }
@@ -461,9 +462,10 @@ namespace SQLab.Controllers
         public string GetStr()
         {
             //Defining asset lists.
-            string[] allAssetList = new string[] { "VXX", "TQQQ", "UPRO", "SVXY", "TMV", "UWT", "UGAZ" };
+            string[] allAssetList = new string[] { "VXX", "TQQQ", "UPRO", "SVXY", "TMV", "UCO", "UGAZ" };
+            string[] allAssetListVIX = new string[] { "VXX", "TQQQ", "UPRO", "SVXY", "TMV", "UCO", "UGAZ", "^VIX" };
 
-            double[] bullishWeights = new double[] { -0.1, 0.3, 0.3, 0.2, -0.1, -0.05, -0.05 };
+            double[] bullishWeights = new double[] { -0.1, 0.3, 0.3, 0.2, -0.1, -0.075, -0.05 };
             double[] bearishWeights = new double[] { 1, 0, 0, 0, 0, 0, 0 };
             double[] eventMultiplicator = new double[] { 0.5, 1, 1, 0.85, 0.85, 0.7, 0.7 };
             double[] stciThresholds = new double[] { 0.02, 0.09, 0.075 };
@@ -484,7 +486,9 @@ namespace SQLab.Controllers
 
 
             //Collecting and splitting price data got from SQL Server
-            IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> quotesData = DataSQDBG(allAssetList);
+            Tuple<IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>>, List<SQLab.Controllers.QuickTester.Strategies.DailyData>> quotesDataAll = DataSQDBG(allAssetListVIX);
+            IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> quotesData = quotesDataAll.Item1;
+            List<SQLab.Controllers.QuickTester.Strategies.DailyData> VIXQuotes = quotesDataAll.Item2;
 
             //Get, split and convert GSheet data
             var gSheetReadResultPos = UberRenewedGoogleApiGsheet1(usedGSheetRefPos);
@@ -519,6 +523,29 @@ namespace SQLab.Controllers
             double[] currDataDiffVix = vixCont.Item4;
             double[] currDataPercChVix = vixCont.Item5;
             double spotVixValue = vixCont.Item6;
+
+            double[] spotVixValueDb = new double[STCId.Item1.Length];
+            for (int iRows = 0; iRows < spotVixValueDb.Length; iRows++)
+            {
+                spotVixValueDb[iRows]= VIXQuotes[VIXQuotes.Count - iRows - 1].AdjClosePrice;
+            }
+
+            double[] vixLeverage = new double[STCId.Item1.Length];
+            for (int iRows = 0; iRows < vixLeverage.Length; iRows++)
+            {
+                if (spotVixValueDb[iRows] >= 30)
+                {
+                    vixLeverage[iRows] = 0.1;
+                }
+                else if (spotVixValueDb[iRows] >= 21)
+                {
+                    vixLeverage[iRows] = 1 - (spotVixValueDb[iRows] - 21) * 0.1;
+                }
+                else
+                {
+                    vixLeverage[iRows] = 1;
+                }
+            }
 
             int[] pastDataResIndexVec = new int[STCId.Item1.Length];
             for (int iRows = 0; iRows < pastDataResIndexVec.Length; iRows++)
@@ -584,27 +611,32 @@ namespace SQLab.Controllers
             }
 
             double[] finalWeightMultiplier = new double[pastDataResIndexVec.Length];
+            double[] finalWeightMultiplierVIX = new double[pastDataResIndexVec.Length];
             int[] eventCodeFinal = new int[pastDataResIndexVec.Length];
             for (int iRows = 0; iRows < finalWeightMultiplier.Length; iRows++)
             {
                 if ((eventCode[iRows] <= 4 && eventCode[iRows] > 0) || (eventCode[iRows] == 5 && STCId.Item2[iRows] >= stciThresholds[0]) || (eventCode[iRows] == 6 && STCId.Item2[iRows] <= stciThresholds[1]))
                 {
                     finalWeightMultiplier[iRows] = eventFinalWeightedSignal[iRows];
+                    finalWeightMultiplierVIX[iRows] = finalWeightMultiplier[iRows] *vixLeverage[iRows];
                     eventCodeFinal[iRows] = eventCode[iRows];
                 }
                 else if (eventCode[iRows] == 0 && STCId.Item2[iRows] >= stciThresholds[2])
                 {
                     finalWeightMultiplier[iRows] = eventMultiplicator[0];
+                    finalWeightMultiplierVIX[iRows] = finalWeightMultiplier[iRows] * vixLeverage[iRows];
                     eventCodeFinal[iRows] = 7;
                 }
                 else if ((eventCode[iRows] == 5 && STCId.Item2[iRows] < stciThresholds[0]) || (eventCode[iRows] == 6 && STCId.Item2[iRows] > stciThresholds[1]))
                 {
                     finalWeightMultiplier[iRows] = 0;
+                    finalWeightMultiplierVIX[iRows] = finalWeightMultiplier[iRows] * vixLeverage[iRows];
                     eventCodeFinal[iRows] = 9;
                 }
                 else
                 {
                     finalWeightMultiplier[iRows] = 0;
+                    finalWeightMultiplierVIX[iRows] = finalWeightMultiplier[iRows] * vixLeverage[iRows];
                     eventCodeFinal[iRows] = 8;
                 }
             }
@@ -718,7 +750,7 @@ namespace SQLab.Controllers
 
             double currWeightedSignal = eventFinalWeightedSignal[0];
             double currSTCI = STCId.Item2[0];
-            double currFinalWeightMultiplier = finalWeightMultiplier[0];
+            double currFinalWeightMultiplier = finalWeightMultiplierVIX[0];
 
             string currEventName = "";
             switch (currEventCode)
@@ -813,13 +845,13 @@ namespace SQLab.Controllers
             double[] nextPosValue = new double[allAssetList.Length + 1];
             for (int jCols = 0; jCols < nextPosValue.Length - 1; jCols++)
             {
-                if (finalWeightMultiplier[0] > 0)
+                if (finalWeightMultiplierVIX[0] > 0)
                 {
-                    nextPosValue[jCols] = currPV * finalWeightMultiplier[0] * bullishWeights[jCols];
+                    nextPosValue[jCols] = currPV * finalWeightMultiplierVIX[0] * bullishWeights[jCols];
                 }
-                else if (finalWeightMultiplier[0] < 0)
+                else if (finalWeightMultiplierVIX[0] < 0)
                 {
-                    nextPosValue[jCols] = currPV * finalWeightMultiplier[0] * bearishWeights[jCols] * (-1);
+                    nextPosValue[jCols] = currPV * finalWeightMultiplierVIX[0] * bearishWeights[jCols] * (-1);
                 }
             }
 
@@ -893,7 +925,7 @@ namespace SQLab.Controllers
             }
 
 
-            string[,] pastDataMtxToJS = new string[usedDateVec.Length, 15];
+            string[,] pastDataMtxToJS = new string[usedDateVec.Length, 16];
             for (int iRows = 0; iRows < pastDataMtxToJS.GetLength(0); iRows++)
             {
                 pastDataMtxToJS[iRows, 0] = prevDateVec[iRows].ToString("yyyy-MM-dd");
@@ -905,8 +937,9 @@ namespace SQLab.Controllers
                 pastDataMtxToJS[iRows, 10] = eventFinalSignal[iRows].ToString();
                 pastDataMtxToJS[iRows, 11] = Math.Round(eventFinalWeightedSignal[iRows] * 100, 2).ToString() + "%";
                 pastDataMtxToJS[iRows, 12] = Math.Round(STCId.Item2[iRows] * 100, 2).ToString() + "%";
-                pastDataMtxToJS[iRows, 13] = prevEventNames[iRows];
-                pastDataMtxToJS[iRows, 14] = Math.Round(finalWeightMultiplier[iRows] * 100, 2).ToString() + "%";
+                pastDataMtxToJS[iRows, 13] = Math.Round(spotVixValueDb[iRows], 2).ToString();
+                pastDataMtxToJS[iRows, 14] = prevEventNames[iRows];
+                pastDataMtxToJS[iRows, 15] = Math.Round(finalWeightMultiplierVIX[iRows] * 100, 2).ToString() + "%";
 
             }
 
@@ -958,6 +991,7 @@ namespace SQLab.Controllers
             sb.Append(@"""," + Environment.NewLine + @"""currentEventName"": """ + currEventName);
             sb.Append(@"""," + Environment.NewLine + @"""currentWeightedSignal"": """ + currWeightedSignal.ToString());
             sb.Append(@"""," + Environment.NewLine + @"""currentSTCI"": """ + Math.Round(currSTCI * 100, 2).ToString() + "%");
+            sb.Append(@"""," + Environment.NewLine + @"""currentVIX"": """ + Math.Round(spotVixValueDb[0], 2).ToString());
             sb.Append(@"""," + Environment.NewLine + @"""currentFinalWeightMultiplier"": """ + Math.Abs(Math.Round(currFinalWeightMultiplier * 100, 2)).ToString() + "%");
 
 

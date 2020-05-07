@@ -108,6 +108,8 @@ namespace DbCommon
         public TransactionType TransactionType { get; set; }
         public AssetType AssetTypeID { get; set; }
         public int SubTableID { get; set; }
+
+        public double OldVolume { get; set; }
         public double Volume { get; set; }
         public double Price { get; set; }
         public DateTime DateTime { get; set; }

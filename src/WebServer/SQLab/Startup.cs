@@ -95,6 +95,16 @@ namespace SQLab
                 Console.WriteLine("A_G_CId and A_G_CSe from Config has NOT been found. Cannot initialize GoogelAuthentication.");
                 Utils.Logger.Warn("A_G_CId and A_G_CSe from Config has NOT been found. Cannot initialize GoogelAuthentication.");
             }
+
+            services.AddLogging(loggingBuilder =>
+            {
+                loggingBuilder.AddConfiguration(Configuration.GetSection("LoggingToConsole"));
+                loggingBuilder.AddConsole();
+                loggingBuilder.AddDebug();
+
+                // set nLog here if NLog works properly
+                loggingBuilder.AddProvider(new SQLabAspLoggerProvider());
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -110,12 +120,14 @@ namespace SQLab
             // Therefore logging level cannot be changed by modifying that file (at least, not without extra FileSystemWatcher programming)
             // B. On the other hand Nlog is based on DNX, not DNXCore, and implements FileSystemWatcher properly, and I tested it and 
             // when the app.nlog file is changed by Notepad nLog under Asp.NET notices the LogLevelChange.
-            loggerFactory.AddConsole(Configuration.GetSection("LoggingToConsole"));
-            //loggerFactory.AddConsole(LogLevel.Debug);     // write to the Console  (if available) window as Colorful multiline (in Kestrel??) . MinLevel can be specified. by default it is LogLevel.Information
-            loggerFactory.AddDebug(Microsoft.Extensions.Logging.LogLevel.Trace);       // write to the Debug output window (in VS). MinLevel can be specified. by default it is LogLevel.Information
+            
+            //var x = Configuration.GetSection("LoggingToConsole");   // it is null
+            //loggerFactory.AddConsole(Configuration.GetSection("LoggingToConsole"));
+            ////loggerFactory.AddConsole(LogLevel.Debug);     // write to the Console  (if available) window as Colorful multiline (in Kestrel??) . MinLevel can be specified. by default it is LogLevel.Information
+            //loggerFactory.AddDebug(Microsoft.Extensions.Logging.LogLevel.Trace);       // write to the Debug output window (in VS). MinLevel can be specified. by default it is LogLevel.Information
+                        
             // set nLog here if NLog works properly
-            loggerFactory.AddProvider(new SQLabAspLoggerProvider());
-
+            // loggerFactory.AddProvider(new SQLabAspLoggerProvider());
             
             string envLogMsg = $"ASP env.EnvironmentName(machine-wide ASPNETCORE_ENVIRONMENT EnvVar or C# .UseEnvironment()):'{env.EnvironmentName}'";
             Console.WriteLine(envLogMsg);

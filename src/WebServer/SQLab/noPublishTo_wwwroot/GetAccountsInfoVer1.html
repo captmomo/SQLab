@@ -44,10 +44,16 @@
         <font size="2" color=#0000FF> (Leverage: <b><span id="idTotalMaxRiskedLeverage"></span></b>)</font>
     </span><br>
     <span title="This is probably a useless number." style="font: large sans-serif">Delta Adjusted Bullish/Bearish Market Orientation <font size="2">(LongStock - ShortStock + dAdj.CallOption - dAdj.PutOption)</font>: <font size="4"><b><span id="idTotalMarketOrientation"></span></b></font> </span><br>
-    <span title="Expect this Beta exposure to QQQ. If QQQ goes up 1%, expect this exposure to go up 1%." style="font: x-large sans-serif">Beta-Delta Adjusted Bullish/Bearish Market Orientation 
+    <span title="Expect this Beta exposure to QQQ. If QQQ goes up 1%, expect this exposure to go up 1%." 
+        style="font: x-large sans-serif">
+        <font color=#B200FF>Beta-</font>
+        <font >Delta</font>
+        <font color=#B200FF>Adjusted</font>
+        <font >Bullish/Bearish</font>
+        <font color=#B200FF>Market Orientation</font>
         <font size="2">(approx. mkt exposure sum)</font>: 
-        <font size="4" color=#0000FF><b><span id="idBetaDeltaAdjTotalMarketOrientation"></span></b></font>
-        <font size="2" color=#0000FF> (Leverage: <b><span id="idBetaDeltaAdjTotalMarketOrientationLeverage"></span></b>)</font>
+        <font size="4" color=#B200FF><b><span id="idBetaDeltaAdjTotalMarketOrientation"></span></b></font>
+        <font size="2" color=#B200FF> (Leverage: <b><span id="idBetaDeltaAdjTotalMarketOrientationLeverage"></span></b>)</font>
     </span><br>
  
 
@@ -75,13 +81,19 @@
         console.log("Script in Body1.");
         var round = Math.round;
 
-        // MarketWatch Beta calculation is quite good. Use that.  There, Beta of QQQ: 1.18, that is the base.  
-        // UNG: discretionary override from 0.03 to 0.23 (UGAZ too)
-        // TLT: discretionary override from -0.31 to -0.50 (TMF too)
-        var betaArr = {"QQQ": 1.18/1.18, "TQQQ": 3.0, "SPY": 1/1.18, "TWM": -2.07/1.18,            // market ETFs
-        "VXX": -3.4/1.18,  "VXZ": -1.82/1.18,  "SVXY": 2.87/1.18, "ZIV": 1.82/1.18,                  // VIX
-        "TLT": -0.50/1.18, "TMF": 3*-0.50/1.18, "TIP": -0.06/1.18, "USO": 0.83/1.18, "UWT": 1.87/1.18, "UNG": 0.23/1.18, "UGAZ": 3*0.23/1.18,                            // HL hedges
-        "PM": 0.62/1.18 };     // it is QQQ Beta, not SPY beta                // companies
+        // guessed Beta for HL hedges and companies 
+        // MarketWatch Beta calculation is quite good. Use that If it is available.  There, Beta of QQQ: 1.18, that is the base.  
+        var betaArr = {"QQQ": 1.18/1.18, "TQQQ": 3.0, "SQQQ": -3.0, "SPY": 1/1.18, "TWM": -2.07/1.18,            // market ETFs
+        "VXX": -3.4/1.18,  "VXZ": -1.82/1.18,  "SVXY": 1.7/1.18, "ZIV": 1.81/1.18,                  // VIX
+        "TLT": -0.50/1.18, // https://www.ishares.com/us/products/239454/ishares-20-year-treasury-bond-etf says -0.25, MarketWatch: -0.31, discretionary override from -0.31 to -0.50 (TMF too)
+        "TMF": 3*-0.50/1.18, "TMV": -1*3*-0.50/1.18,  "TIP": -0.06/1.18, 
+        "USO": 0.83/1.18, "SCO": -2.0*0.83/1.18, "UCO": 1.25/1.18, 
+        "UNG": 0.23/1.18,   // discretionary override from 0.03 to 0.23 (UGAZ too)
+        "UGAZ": 3*0.23/1.18,     
+        "GLD": (-0.24*1.18)/1.18 ,  // GLD has no Beta on MarketWatch. YF (5Years, monthly): 0.04. But DC's discretionary (logical) override: -0.24 
+        // companies                     
+        "PM": 0.62/1.18 ,        
+        };     // it is QQQ Beta, not SPY beta                
 
         brAccounts = "", timestamps = "", pageTitle = "";
         totalNetLiquidation = 0.0, totalCash = 0.0, totalInitMarginReq = 0.0, totalMaintMarginReq = 0.0, totalGrossPosValue = 0.0;
